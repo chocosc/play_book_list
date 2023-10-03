@@ -112,10 +112,6 @@ def generate_result():
 
     return result
 
-
-cur_img_index = 0  # cur_img_index를 전역 변수로 초기화
-img_paths = []  # img_paths를 전역 변수로 초기화
-
 def show_image():
     global cur_img_index, img_paths
     if not img_paths:
@@ -130,9 +126,7 @@ def show_image():
             authors = result[index]['authors']
             generate_result_img(index, mockup_img, img_url, title, authors)
 
-        if result:
-            for i in range(len(result)):
-                img_paths.append(f"./pages/result_img/result_{i}.png")
+            img_paths.append(f"./pages/result_img/result_{index}.png")
 
     return cur_img_index, img_paths
 
