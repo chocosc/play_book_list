@@ -29,7 +29,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-cred = credentials.Certificate("C:\Users\USER\play_book_list\.streamlit\playbooklist.json")
+cred = credentials.Certificate("C:/Users/USER/play_book_list/.streamlit/playbooklist.json")
 firebase_admin.initialize_app(cred)
 
 @st.cache_resource(show_spinner=None)
@@ -80,7 +80,7 @@ def get_embedding(query):
     return response["data"][0]["embedding"]
 
 def run_query(index_list):
-    db = firestore.Client.from_service_account_json("C:\Users\USER\play_book_list\.streamlit\playbooklist.json")
+    db = firestore.Client.from_service_account_json("C:/Users/USER/play_book_list/.streamlit/playbooklist.json")
     for i in index_list:
         s_id = str(i)
         docs = (
