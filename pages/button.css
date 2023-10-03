@@ -1,0 +1,15 @@
+import * as React from 'react';
+import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
+import FastForwardIcon from '@mui/icons-material/FastForward';
+import { deepOrange } from '@mui/material/colors';
+const color = deepOrange[600];
+export default function IconButtons() {
+    return (
+        < Stack direction="row" spacing={1} >
+            < IconButton color=deepOrange[600] aria-label="FastForwardIcon" size="large" >
+                < FastForwardIcon/ >
+            < /IconButton >
+        < /Stack >
+);
+}
