@@ -131,8 +131,8 @@ def check_embedding(index_list, df):
         docs = doc_ref.get()
         
         if not docs.exists:
-            s_name = df[df["song_id"] == i]["song_name"].values[0]
-            s_contents = df[df["song_id"] == i]["total_contents"].values[0]
+            s_name = df[df["song_id"] ==int(s_id)]["song_name"].values[0]
+            s_contents = df[df["song_id"] ==int(s_id)]["total_contents"].values[0]
             # get_translation 함수를 사용하여 번역 수행
             s_eng = get_translation(s_contents)
             # get_embedding 함수를 사용하여 텍스트 임베딩 생성
