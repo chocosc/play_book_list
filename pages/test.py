@@ -97,7 +97,7 @@ def generate_result():
         if not embeddings_str:
             continue
 
-        embeddings = np.array(eval(embeddings_str.replace(' ', ',')))  # 문자열에서 공백을 쉼표로 대체
+        embeddings = np.array(eval(embeddings_str.replace(' ', ',')))
 
         if embeddings_sum is None:
             embedding_len = len(embeddings)
