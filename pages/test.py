@@ -124,9 +124,9 @@ def show_image():
         authors = result[index]['authors']
         generate_result_img(index, mockup_img, img_url, title, authors)
 
-    if result:
-        for i in range(len(result)):
-            img_paths.append(f"./pages/result_img/result_{i}.png")
+        if result:
+            for i in range(len(result)):
+                img_paths.append(f"./pages/result_img/result_{i}.png")
 
     return cur_img_index, img_paths
 
