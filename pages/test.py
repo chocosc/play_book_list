@@ -113,22 +113,20 @@ def generate_result():
     return result
 
 def show_image():
-    global cur_img_index, img_paths
-    if 'img_paths' not in globals():
-        cur_img_index = 0
-        img_paths = []
+    cur_img_index = 0
+    img_paths = []
 
-        result = generate_result()
-        mockup_img = generate_mockup_img()
-        for index in range(len(result)):
-            img_url = result[index]['img_url']
-            title = result[index]['title']
-            authors = result[index]['authors']
-            generate_result_img(index, mockup_img, img_url, title, authors)
+    result = generate_result()
+    mockup_img = generate_mockup_img()
+    for index in range(len(result)):
+        img_url = result[index]['img_url']
+        title = result[index]['title']
+        authors = result[index]['authors']
+        generate_result_img(index, mockup_img, img_url, title, authors)
 
-        if result:
-            for i in range(len(result)):
-                img_paths.append(f"./pages/result_img/result_{i}.png")
+    if result:
+        for i in range(len(result)):
+            img_paths.append(f"./pages/result_img/result_{i}.png")
 
     return cur_img_index, img_paths
 
