@@ -1,0 +1,9 @@
+[[pages]]
+path = "home.py"
+name = "Home"
+icon = "🏠"
+
+[[pages]]
+path = "k_trenditonal_drinks.py"
+name = "전통주 추천"
+icon = "🍶"
