@@ -124,8 +124,11 @@ def show_image():
             img_url = result[index]['img_url']
             title = result[index]['title']
             authors = result[index]['authors']
-            img_path = generate_result_img(index, mockup_img, img_url, title, authors)
-            img_paths.append(img_path)
+            generate_result_img(index, mockup_img, img_url, title, authors)
+
+        if result:
+            for i in range(len(result)):
+                img_paths.append(f"./pages/result_img/result_{i}.png")
 
     return cur_img_index, img_paths
 
