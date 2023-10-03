@@ -38,10 +38,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate("./.streamlit/playbooklist.json")
-    firebase_admin.initialize_app(cred, name='main')
-
 @st.cache_resource(show_spinner=None)
 def init_openai_key():
     openai.api_key = st.secrets.OPENAI_TOKEN
