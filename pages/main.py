@@ -47,7 +47,7 @@ def init_openai_key():
 def init_gcp_connection():
     gcp_service_account = st.secrets["gcp_service_account"]
     gcp_credentials = service_account.Credentials.from_service_account_info(gcp_service_account)
-    translate_client = translate.Client(credentials=gcp_credentials)
+    translate_client = translate.Client(key=API_KEY)
     
     return translate_client
 
@@ -88,7 +88,7 @@ def display_song_information(index_id):
     st.write(df[df["song_id"] == int(index_id)]["song_name"].values[0])
 
 def get_translation(text_to_translate):
-    translate_client = translate.Client()
+    translate_client = translate.Client(key=API_KEY)
     response = translate_client.translate(text_to_translate, target_language='en')
     translated_text = response['translatedText']
 
