@@ -115,18 +115,16 @@ def generate_result():
 def show_image():
     global cur_img_index, img_paths
 
-    if not img_paths:
-        cur_img_index = 0
-        img_paths = []
+    img_paths = []  # img_paths 변수를 초기화합니다.
 
-        result = generate_result()
-        mockup_img = generate_mockup_img()
-        for index in range(len(result)):
-            img_url = result[index]['img_url']
-            title = result[index]['title']
-            authors = result[index]['authors']
-            img_path = generate_result_img(index, mockup_img, img_url, title, authors)  # 이미지 경로 저장
-            img_paths.append(img_path)  # 이미지 경로를 리스트에 추가
+    result = generate_result()
+    mockup_img = generate_mockup_img()
+    for index in range(len(result)):
+        img_url = result[index]['img_url']
+        title = result[index]['title']
+        authors = result[index]['authors']
+        img_path = generate_result_img(index, mockup_img, img_url, title, authors)  # 이미지 경로 저장
+        img_paths.append(img_path)  # 이미지 경로를 리스트에 추가
 
     if not img_paths:
         return cur_img_index, []
