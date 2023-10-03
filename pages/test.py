@@ -88,16 +88,23 @@ def _vector_search(query_embedding):
 
 def generate_result():
     docs = run_query(index_list)
-    docs_list = list(docs)
-    index = [i for i in range(len(docs_list))]
-    row_df = pd.DataFrame(docs, index=index)
-    embedding_len = len(eval(row_df.loc[0, 'embeddings']))
-    embeddings = np.zeros(embedding_len)
-    for embedding in row_df['embeddings']:
-        embeddings += np.array(eval(embedding))
-    result = _vector_search(embeddings)
+    embedding_len = None
+    embeddings_sum = None
+    for doc in docs:
+        embeddings = np.array(eval(doc.get("embeddings", "[]")))
+        if embeddings_sum is None:
+            embedding_len = len(embeddings)
+            embeddings_sum = np.zeros(embedding_len)
+            
+        embeddings_sum += embeddings
+
+    if embedding_len is None:
+        return []
+
+    result = _vector_search(embeddings_sum)
     
     return result
+
 
 cur_img_index = 0  # cur_img_index를 전역 변수로 초기화
 img_paths = []  # img_paths를 전역 변수로 초기화
