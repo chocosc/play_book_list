@@ -7,7 +7,6 @@ streamlit-extras==0.3.2
 st-clickable-images==0.0.3
 gcsfs==2023.9.1
 google-cloud-bigquery==3.10.0
-google-cloud-translate-v2
 st-annotated-text==4.0.1
 st-pages==0.4.4
 pinecone-client==2.2.2
