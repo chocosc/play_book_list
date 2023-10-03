@@ -127,12 +127,11 @@ def show_image():
             authors = result[index]['authors']
             generate_result_img(index, mockup_img, img_url, title, authors)
 
-        if result:
-            for i in range(len(result)):
-                img_paths.append(f"./pages/result_img/result_{i}.png")
+            if result:
+                img_paths.append(f"./pages/result_img/result_{index}.png")
 
     if not img_paths:
-        return cur_img_index, []
+        img_paths.append("")  # 이미지 경로가 없는 경우 빈 문자열 추가
 
     if cur_img_index >= len(img_paths):
         cur_img_index = 0
