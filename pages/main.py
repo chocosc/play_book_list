@@ -120,7 +120,7 @@ def get_embedding(query):
     embedding_str_list = [str(item) if isinstance(item, (int, float)) else item for item in embedding_data]
     result_str = " ".join(embedding_str_list)
 
-    return embedding_str
+    return result_str
 
 def check_embedding(index_list, df):
     # Firestore 클라이언트 설정
