@@ -114,7 +114,7 @@ def generate_result():
 
 def show_image():
     global cur_img_index, img_paths
-    if not img_paths:
+    if 'img_paths' not in globals():
         cur_img_index = 0
         img_paths = []
 
