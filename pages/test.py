@@ -17,6 +17,7 @@ import base64
 import requests
 import pickle
 import time
+from google.cloud.firestore import FieldFilter
 from pages.generate_result_img import *
 
 st.markdown(
