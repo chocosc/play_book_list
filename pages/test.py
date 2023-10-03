@@ -131,6 +131,9 @@ def show_image():
             for i in range(len(result)):
                 img_paths.append(f"./pages/result_img/result_{i}.png")
 
+    if not img_paths:
+        return cur_img_index, []
+
     if cur_img_index >= len(img_paths):
         cur_img_index = 0
 
