@@ -38,7 +38,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-cred = credentials.Certificate("./.streamlit/playbooklist.json")
+cred = credentials.Certificate("C:\Users\USER\play_book_list\.streamlit\playbooklist.json")
 firebase_admin.initialize_app(cred)
 
 @st.cache_resource(show_spinner=None)
