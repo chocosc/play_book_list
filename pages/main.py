@@ -126,7 +126,7 @@ def get_embedding(query):
 
 def check_embedding(index_list, df):
     # Firestore 클라이언트 설정
-    db = firestore.Client.from_service_account_json("./.streamlit/playbooklist.json")
+    db = firestore.Client.from_service_account_json("C:\Users\USER\play_book_list\.streamlit\playbooklist.json")
     
     for i in index_list:
         s_id = str(i)
