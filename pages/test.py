@@ -29,9 +29,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-cred = credentials.Certificate("./.streamlit/playbooklist.json")
-firebase_admin.initialize_app(cred)
-
 @st.cache_resource(show_spinner=None)
 def init_openai_key():
     openai.api_key = st.secrets.OPENAI_TOKEN
@@ -40,30 +37,6 @@ def init_openai_key():
 
 with open('index_list.pickle', 'rb') as file:
     index_list = pickle.load(file)
-
-def init_gcp_connection():
-    gcp_service_account = st.secrets["gcp_service_account"]
-    gcp_credentials = service_account.Credentials.from_service_account_info(gcp_service_account)
-    translate_client = translate.TranslationServiceClient(credentials=gcp_credentials)
-    
-    return translate_client
-    
-translate_client = init_gcp_connection()
-
-@st.cache_resource(show_spinner=None)
-def get_translation(query):
-    parent = f"projects/{st.secrets.PROJECTID}/locations/global"
-    response = translate_client.translate_text(
-        request={
-            "parent": parent,
-            "contents": [query],
-            "mime_type": "text/plain",
-            "source_language_code": "ko",
-            "target_language_code": "en-US",
-        }
-    )
-    translations = response.translations
-    return translations[0].translated_text
 
 @st.cache_data(show_spinner=None)
 def generate_songs():
