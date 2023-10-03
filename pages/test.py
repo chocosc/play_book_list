@@ -136,9 +136,10 @@ if 'idx' not in st.session_state:
     st.session_state.idx = 0
 
 def change():
-    st.session_state.idx += 1
-    if st.session_state.idx >= len(img_paths):
-        st.session_state.idx = 0
+    global cur_img_index
+    cur_img_index += 1
+    if cur_img_index >= len(img_paths):
+        cur_img_index = 0
 
 def get_author_title(item):
     return f"**{item['authors']}** | **{item['publisher']}**"
