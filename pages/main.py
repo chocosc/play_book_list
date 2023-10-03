@@ -89,19 +89,12 @@ def display_song_information(index_id):
     annotated_text(("Song Name", "", "#ff873d"))
     st.write(df[df["song_id"] == int(index_id)]["song_name"].values[0])
 
-def get_translation(query):
-    parent = f"projects/{st.secrets.PROJECTID}/locations/global"
-    response = translate_client.translate_text(
-        request={
-            "parent": parent,
-            "contents": [query],
-            "mime_type": "text/plain",
-            "source_language_code": "ko",
-            "target_language_code": "en-US",
-        }
-    )
-    translations = response.translations
-    return translations[0].translated_text
+def get_translation(text_to_translate):
+    translate_client = translate.Client()
+    response = translate_client.translate(text_to_translate, target_language='en')
+    translated_text = response['translatedText']
+
+    return translated_text
 
 
 def vector_search(query_embedding):
@@ -135,7 +128,7 @@ def check_embedding(index_list, df):
             s_name = df[df["song_id"] == s_id]["song_name"].values[0]
             s_contents = df[df["song_id"] == s_id]["total_contents"].values[0]
             # get_translation 함수를 사용하여 번역 수행
-            s_eng = get_translation(s_contents)
+            s_eng = get_translation(text_to_translate=s_contents)
             # get_embedding 함수를 사용하여 텍스트 임베딩 생성
             s_embedding = get_embedding(s_eng)
 
