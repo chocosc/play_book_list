@@ -90,19 +90,26 @@ def generate_result():
     docs = run_query(index_list)
     embedding_len = None
     embeddings_sum = None
+
     for doc in docs:
-        embeddings = np.array(eval(doc.get("embeddings", "[]")))
+        embeddings_str = doc.get("embeddings", "[]")
+        
+        if not embeddings_str:
+            continue
+
+        embeddings = np.array(eval(embeddings_str.replace(' ', ',')))  # 문자열에서 공백을 쉼표로 대체
+
         if embeddings_sum is None:
             embedding_len = len(embeddings)
             embeddings_sum = np.zeros(embedding_len)
-            
+
         embeddings_sum += embeddings
 
     if embedding_len is None:
         return []
 
     result = _vector_search(embeddings_sum)
-    
+
     return result
 
 
