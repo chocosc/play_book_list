@@ -92,8 +92,8 @@ def generate_result():
     embeddings_sum = None
 
     for doc in docs:
-        embeddings_str = doc.get("embeddings", "[]")
-        
+        embeddings_str = doc.get("embeddings")  # "embeddings" 필드의 값을 가져옵니다.
+
         if not embeddings_str:
             continue
 
