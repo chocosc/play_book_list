@@ -124,15 +124,16 @@ def get_embedding(query):
 def check_embedding(index_list, df):
     # Firestore 클라이언트 설정
     db = firestore.Client.from_service_account_json("./.streamlit/playbooklist.json")
-    
-    for i in index_list:
-        s_id = str(i)
-        doc_ref = db.collection("song_df").document(s_id)
-        docs = doc_ref.get()
-        
-        if not docs.exists:
-            s_name = df[df["song_id"] ==int(s_id)]["song_name"].values[0]
-            s_contents = df[df["song_id"] ==int(s_id)]["total_contents"].values[0]
+
+    index_len = len(index_list)
+    for i in range(index_len):
+        s_id = int(index_list[i])
+        doc_ref = db.collection("song_df").document(str(s_id))  # document ID를 문자열로 변경
+        doc = doc_ref.get()
+
+        if not doc.exists:
+            s_name = df[df["song_id"] == s_id]["song_name"].values[0]
+            s_contents = df[df["song_id"] == s_id]["total_contents"].values[0]
             # get_translation 함수를 사용하여 번역 수행
             s_eng = get_translation(s_contents)
             # get_embedding 함수를 사용하여 텍스트 임베딩 생성
