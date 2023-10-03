@@ -92,10 +92,11 @@ def generate_result():
     index = [i for i in range(len(docs_list))]
     row_df = pd.DataFrame(docs, index=index)
     embedding_len = len(eval(row_df.loc[0, 'embeddings']))
-    embeddings = np.array([0.0 for x in range(embedding_len)])
-    for embedding in list(row_df['embeddings']):
-        embeddings += eval(embedding)
-    result = _vector_search(list(embeddings))
+    embeddings = np.zeros(embedding_len)
+    for embedding in row_df['embeddings']:
+        embeddings += np.array(eval(embedding))
+    result = _vector_search(embeddings)
+    
     return result
 
 cur_img_index = 0  # cur_img_index를 전역 변수로 초기화
