@@ -112,26 +112,27 @@ def generate_result():
 
     return result
 
+cur_img_index = 0  # cur_img_index를 전역 변수로 초기화
+img_paths = []  # img_paths를 전역 변수로 초기화
+
 def show_image():
     global cur_img_index, img_paths
-
-    # img_paths 변수를 초기화합니다.
-    img_paths = []
-
-    result = generate_result()
-    mockup_img = generate_mockup_img()
-    for index in range(len(result)):
-        img_url = result[index]['img_url']
-        title = result[index]['title']
-        authors = result[index]['authors']
-        img_path = generate_result_img(index, mockup_img, img_url, title, authors)  # 이미지 경로 저장
-        img_paths.append(img_path)  # 이미지 경로를 리스트에 추가
-
-    if not img_paths:
-        return cur_img_index, []
-
-    if cur_img_index >= len(img_paths):
+    if not img_paths:  # 이미지 경로가 없을 때만 초기화
         cur_img_index = 0
+        img_paths = []
+
+        result = generate_result()
+        mockup_img = generate_mockup_img()
+        for index in range(len(result)):
+            img_url = result[index]['img_url']
+            title = result[index]['title']
+            authors = result[index]['authors']
+            # 결과 이미지를 result_0.png, result_1.png로 저장. 덮어쓰기해서 용량 아끼기 위함.
+            generate_result_img(index, mockup_img, img_url, title, authors)
+
+        if result:
+            for i in range(len(result)):
+                img_paths.append(f"./pages/result_img/result_{i}.png")
 
     return cur_img_index, img_paths
 
@@ -141,16 +142,14 @@ if 'idx' not in st.session_state:
     st.session_state.idx = 0
 
 def change():
-    global cur_img_index, img_paths
-    cur_img_index += 1
-    if cur_img_index >= len(img_paths):
-        cur_img_index = 0
+    st.session_state.idx += 1
+    if st.session_state.idx >= len(img_paths):
+        st.session_state.idx = 0
 
 def get_author_title(item):
     return f"**{item['authors']}** | **{item['publisher']}**"
 
-
-empty1, con1, empty2 = st.columns([0.1, 1.0, 0.1])
+empty1, con1, empty2 = st.columns([0.2, 1.0, 0.2])
 with empty1:
     st.empty()
 with con1:
@@ -160,22 +159,28 @@ with con1:
             {
                 border: 3px solid rgba(150, 55, 23, 0.2);
                 border-radius: 0.5rem;
-                padding: calc(1em - 3px)
+                padding: calc(1em - 1px)
             }
             """,
     ):
-        c1, c2 = st.columns(2, gap="medium")
+        c1, c2 = st.columns(2, gap="small")
         result = generate_result()
         mockup_img = generate_mockup_img()
         with c1:
             st.image(img_paths[st.session_state.idx])
+
             for index in range(len(result)):
                 img_url = result[index]['img_url']
                 title = result[index]['title']
                 authors = result[index]['authors']
+                # 결과 이미지를 result_0.png, result_1.png로 저장. 덮어쓰기해서 용량 아끼기 위함.
                 generate_result_img(index, mockup_img, img_url, title, authors)
-            next_img = st.button("다음 장으로 ▶▶")
-    
+
+            next_img = st.button("**다음 장으로 ▶▶**")
+
+            if next_img:
+                change()
+
         with c2:
             want_to_main = st.button("새 플레이리스트 만들기 🔁")
             if want_to_main:
@@ -187,19 +192,6 @@ with con1:
                     st.write(
                         f"**{item['authors']}** | {item['publisher']} | {item['published_at']} | [yes24]({item['url']})")
                     st.write(item["summary"])
-    
-    
-        if next_img:
-            progress_text = "**다음장으로 넘기는 중입니다...📖**"
-            my_bar = st.progress(0, text=progress_text)
-            
-            for percent_complete in range(100):
-                time.sleep(0.01)
-                my_bar.progress(percent_complete + 1, text=progress_text)
-            time.sleep(1)
-            with my_bar:
-                change()
-                my_bar.empty()
 
 with empty2:
     st.empty()
