@@ -3,7 +3,7 @@ from google.cloud import firestore
 from streamlit_extras.switch_page_button import switch_page
 from annotated_text import annotated_text
 from google.oauth2 import service_account
-from google.cloud import translate_v2 as translate
+from google.cloud import translate
 import firebase_admin
 from firebase_admin import credentials
 import pinecone
@@ -47,11 +47,9 @@ def init_openai_key():
 def init_gcp_connection():
     gcp_service_account = st.secrets["gcp_service_account"]
     gcp_credentials = service_account.Credentials.from_service_account_info(gcp_service_account)
-    translate_client = translate.Client()
+    translate_client = translate.Client(credentials=gcp_credentials)
     
     return translate_client
-
-translate_client = init_gcp_connection()
 
 def init_pinecone_connection():
     pinecone.init(
@@ -117,6 +115,7 @@ def get_embedding(query):
 def check_embedding(index_list, df):
     # Firestore 클라이언트 설정
     db = firestore.Client.from_service_account_json("./.streamlit/playbooklist.json")
+    translate_client = init_gcp_connection()
 
     index_len = len(index_list)
     for i in range(index_len):
