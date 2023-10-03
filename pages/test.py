@@ -88,7 +88,8 @@ def _vector_search(query_embedding):
 
 def generate_result():
     docs = run_query(index_list)
-    index = [i for i in range(len(docs))]
+    docs_list = list(docs)
+    index = [i for i in range(len(docs_list))]
     row_df = pd.DataFrame(docs, index=index)
     embedding_len = len(eval(row_df.loc[0, 'embeddings']))
     embeddings = np.array([0.0 for x in range(embedding_len)])
