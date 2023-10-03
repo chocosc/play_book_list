@@ -116,11 +116,17 @@ def get_embedding(query):
         model="text-embedding-ada-002"
     )
 
+    embedding_str = " "
+    
     embedding_data = response["data"][0]["embedding"]
-    embedding_str_list = [str(item) if isinstance(item, (int, float)) else item for item in embedding_data]
-    result_str = " ".join(embedding_str_list)
-
-    return result_str
+    for item in embedding_data:
+        if isinstance(item, str):
+            embedding_str += item + " "
+        else:
+            # 만약 숫자(float)라면 문자열로 변환하여 추가
+            embedding_str += str(item) + " "
+    
+    return embedding_str
 
 def check_embedding(index_list, df):
     # Firestore 클라이언트 설정
