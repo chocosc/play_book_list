@@ -1,0 +1,6 @@
+.streamlit/secrets.toml
+.streamlit/playbooklist.json
+.idea
+.idea/
+config/
+.ipynb_checkpoints/
