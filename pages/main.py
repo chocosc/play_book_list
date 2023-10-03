@@ -116,7 +116,7 @@ def get_embedding(query):
         model="text-embedding-ada-002"
     )
     
-    embedding_str = ",".join(response["data"][0]["embedding"])
+    embedding_str = ",".join(map(str, response["data"][0]["embedding"]))
     
     return embedding_str
 
