@@ -8,7 +8,7 @@ from google.oauth2 import service_account
 from google.cloud import translate
 from google.cloud import firestore
 import firebase_admin
-from firebase_admin import credentials as 
+from firebase_admin import credentials
 import pandas as pd
 import numpy as np
 import openai
