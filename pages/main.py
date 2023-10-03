@@ -39,7 +39,7 @@ st.markdown(
 )
 
 cred = credentials.Certificate("./.streamlit/playbooklist.json")
-firebase_admin.initialize_app(cred)
+firebase = firebase_admin.initialize_app(cred)
 
 @st.cache_resource(show_spinner=None)
 def init_openai_key():
