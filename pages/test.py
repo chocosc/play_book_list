@@ -115,7 +115,8 @@ def generate_result():
 def show_image():
     global cur_img_index, img_paths
 
-    img_paths = []  # img_paths 변수를 초기화합니다.
+    # img_paths 변수를 초기화합니다.
+    img_paths = []
 
     result = generate_result()
     mockup_img = generate_mockup_img()
