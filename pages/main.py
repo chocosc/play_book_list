@@ -2,8 +2,8 @@ import streamlit as st
 from google.cloud import firestore
 from streamlit_extras.switch_page_button import switch_page
 from annotated_text import annotated_text
-from google.oauth2 import service_account
-from google.cloud import translate_v2 as translate
+from google.cloud import translate
+from google.oauth2.service_account import Credentials
 import firebase_admin
 from firebase_admin import credentials
 import pinecone
@@ -44,11 +44,10 @@ def init_openai_key():
 
     return openai.api_key
 
-def init_gcp_connection():
-    key=st.secrets.API_KEY
-    translate_client = translate.Client(api_key=key)
-
-    return translate_client
+@st.cache_resource
+def init_google_translation_connection():
+    credentials = Credentials.from_service_account_info(st.secrets.GOOGLE)
+    return translate.TranslationServiceClient(credentials=credentials)
 
 def init_pinecone_connection():
     pinecone.init(
@@ -86,12 +85,19 @@ def display_song_information(index_id, df):
     annotated_text(("Song Name", "", "#ff873d"))
     st.write(df[df["song_id"] == int(index_id)]["song_name"].values[0])
 
-def get_translation(text_to_translate):
-    translate_client = translate.Client(key=API_KEY)
-    response = translate_client.translate(text_to_translate, target_language='en')
-    translated_text = response['translatedText']
-
-    return translated_text
+def get_translation(query):
+    parent = f"projects/{st.secrets.PROJECTID}/locations/global"
+    response = google_translate_client.translate_text(
+        request={
+            "parent": parent,
+            "contents": [query],
+            "mime_type": "text/plain",
+            "source_language_code": "ko",
+            "target_language_code": "en-US",
+        }
+    )
+    translations = response.translations
+    return translations[0].translated_text
 
 
 def vector_search(query_embedding):
@@ -114,7 +120,6 @@ def get_embedding(query):
 def check_embedding(index_list, df):
     # Firestore 클라이언트 설정
     db = firestore.Client.from_service_account_json("./.streamlit/playbooklist.json")
-    translate_client = init_gcp_connection()
 
     index_len = len(index_list)
     for i in range(index_len):
@@ -126,9 +131,9 @@ def check_embedding(index_list, df):
             s_name = df[df["song_id"] == s_id]["song_name"].values[0]
             s_contents = df[df["song_id"] == s_id]["total_contents"].values[0]
             # get_translation 함수를 사용하여 번역 수행
-            s_eng = get_translation(text_to_translate=s_contents)
+            s_eng = get_translation(query=s_contents)
             # get_embedding 함수를 사용하여 텍스트 임베딩 생성
-            s_embedding = get_embedding(s_eng)
+            s_embedding = get_embedding(query=s_eng)
 
             data = {
                 "id": s_id,
@@ -142,6 +147,7 @@ def check_embedding(index_list, df):
             doc_ref.set(data)
 
 if __name__ == '__main__':
+    google_translate_client = init_google_translation_connection()
     openai.api_key = init_openai_key()
     pinecone_index = init_pinecone_connection()
     submit_button = False
