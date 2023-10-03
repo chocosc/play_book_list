@@ -3,7 +3,7 @@ from google.cloud import firestore
 from streamlit_extras.switch_page_button import switch_page
 from annotated_text import annotated_text
 from google.oauth2 import service_account
-from google.cloud import translate
+from google.cloud import translate_v2 as translate
 import firebase_admin
 from firebase_admin import credentials
 import pinecone
@@ -45,10 +45,9 @@ def init_openai_key():
     return openai.api_key
 
 def init_gcp_connection():
-    gcp_service_account = st.secrets["gcp_service_account"]
-    gcp_credentials = service_account.Credentials.from_service_account_info(gcp_service_account)
-    translate_client = translate.Client(key=API_KEY)
-    
+    key=st.secrets.API_KEY
+    translate_client = translate.Client(api_key=key)
+
     return translate_client
 
 def init_pinecone_connection():
@@ -81,7 +80,7 @@ def generate_index_list(songs, df):
     return index_list
 
 @st.cache_data(show_spinner=None)
-def display_song_information(index_id):
+def display_song_information(index_id, df):
     album_id = df[df["song_id"] == int(index_id)]["album_id"].values[0]
     st.image(f"./pages/album_img/{album_id}.png")
     annotated_text(("Song Name", "", "#ff873d"))
@@ -180,25 +179,25 @@ if __name__ == '__main__':
                     submit_button = st.form_submit_button("플레이북리스트 결과보기 >")
                 c1, c2, c3, c4, c5 = st.columns(5)
                 with c1:
-                    display_song_information(index_list[0])
+                    display_song_information(index_list[0], df)
                 with c2:
                     try:
-                        display_song_information(index_list[1])
+                        display_song_information(index_list[1], df)
                     except IndexError:
                         pass
                 with c3:
                     try:
-                        display_song_information(index_list[2])
+                        display_song_information(index_list[2], df)
                     except IndexError:
                         pass
                 with c4:
                     try:
-                        display_song_information(index_list[3])
+                        display_song_information(index_list[3], df)
                     except IndexError:
                         pass
                 with c5:
                     try:
-                        display_song_information(index_list[4])
+                        display_song_information(index_list[4], df)
                     except IndexError:
                         pass
 
