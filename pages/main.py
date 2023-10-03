@@ -115,7 +115,10 @@ def get_embedding(query):
         input=[query],
         model="text-embedding-ada-002"
     )
-    return response["data"][0]["embedding"]
+    
+    embedding_str = ",".join(response["data"][0]["embedding"])
+    
+    return embedding_str
 
 def check_embedding(index_list, df):
     # Firestore 클라이언트 설정
