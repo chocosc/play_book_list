@@ -5,8 +5,10 @@ from annotated_text import annotated_text
 from streamlit_extras.stylable_container import stylable_container
 from st_clickable_images import clickable_images
 from google.oauth2 import service_account
-from google.cloud import bigquery
 from google.cloud import translate
+from google.cloud import firestore
+import firebase_admin
+from firebase_admin import credentials as 
 import pandas as pd
 import numpy as np
 import openai
@@ -14,7 +16,21 @@ import pinecone
 import base64
 import requests
 import pickle
+import time
 from pages.generate_result_img import *
+
+st.markdown(
+    """
+    <style>
+        .stProgress > div > div > div > div {
+            background-color: orange;
+        }
+    </style>""",
+    unsafe_allow_html=True,
+)
+
+cred = credentials.Certificate
+firebase_admin.initialize_app(cred)
 
 @st.cache_resource(show_spinner=None)
 def init_openai_key():
@@ -25,15 +41,14 @@ def init_openai_key():
 with open('index_list.pickle', 'rb') as file:
     index_list = pickle.load(file)
 
-@st.cache_resource(show_spinner=None)
 def init_gcp_connection():
     gcp_service_account = st.secrets["gcp_service_account"]
-    credentials = service_account.Credentials.from_service_account_info(gcp_service_account)
-    client = bigquery.Client(credentials=credentials)
-    translate_client = translate.TranslationServiceClient(credentials=credentials)
-    return client, translate_client
-
-client, translate_client = init_gcp_connection()
+    gcp_credentials = service_account.Credentials.from_service_account_info(gcp_service_account)
+    translate_client = translate.TranslationServiceClient(credentials=gcp_credentials)
+    
+    return translate_client
+    
+translate_client = init_gcp_connection()
 
 @st.cache_resource(show_spinner=None)
 def get_translation(query):
@@ -65,14 +80,16 @@ def get_embedding(query):
     return response["data"][0]["embedding"]
 
 def run_query(index_list):
+    db = firestore.Client.from_service_account_json("./.streamlit/playbooklist.json")
     for i in index_list:
         s_id = str(i)
-        c_sql_query = f"SELECT * FROM `playbooklist.song_df.song_embedding` WHERE CAST(id AS STRING) = '{s_id}'"
-        y_query_job = client.query(c_sql_query)
-        rows_raw = y_query_job.result()
-        rows = [dict(row) for row in rows_raw]
+        docs = (
+            db.collection("song_df")
+            .where(filter=FieldFilter("id", "==", s_id))
+            .stream()
+            )
 
-    return rows
+    return docs
 
 def __connect_pinecone():
     pinecone_region = "gcp-starter"
@@ -96,9 +113,9 @@ def _vector_search(query_embedding):
                   key=lambda x: (x['review_cnt'], x['rating']), reverse=True)[:5]
 
 def generate_result():
-    rows = run_query(index_list)
-    index = [i for i in range(len(rows))]
-    row_df = pd.DataFrame(rows, index=index)
+    docs = run_query(index_list)
+    index = [i for i in range(len(docs))]
+    row_df = pd.DataFrame(docs, index=index)
     embedding_len = len(eval(row_df.loc[0, 'embeddings']))
     embeddings = np.array([0.0 for x in range(embedding_len)])
     for embedding in list(row_df['embeddings']):
@@ -111,7 +128,7 @@ img_paths = []  # img_paths를 전역 변수로 초기화
 
 def show_image():
     global cur_img_index, img_paths
-    if not img_paths:  # 이미지 경로가 없을 때만 초기화
+    if not img_paths:
         cur_img_index = 0
         img_paths = []
 
@@ -121,7 +138,6 @@ def show_image():
             img_url = result[index]['img_url']
             title = result[index]['title']
             authors = result[index]['authors']
-            # 결과 이미지를 result_0.png, result_1.png로 저장. 덮어쓰기해서 용량 아끼기 위함.
             generate_result_img(index, mockup_img, img_url, title, authors)
 
         if result:
@@ -143,7 +159,8 @@ def change():
 def get_author_title(item):
     return f"**{item['authors']}** | **{item['publisher']}**"
 
-empty1, con1, empty2 = st.columns([0.2, 1.0, 0.2])
+
+empty1, con1, empty2 = st.columns([0.1, 1.0, 0.1])
 with empty1:
     st.empty()
 with con1:
@@ -153,28 +170,22 @@ with con1:
             {
                 border: 3px solid rgba(150, 55, 23, 0.2);
                 border-radius: 0.5rem;
-                padding: calc(1em - 1px)
+                padding: calc(1em - 3px)
             }
             """,
     ):
-        c1, c2 = st.columns(2, gap="small")
+        c1, c2 = st.columns(2, gap="medium")
         result = generate_result()
         mockup_img = generate_mockup_img()
         with c1:
             st.image(img_paths[st.session_state.idx])
-
             for index in range(len(result)):
                 img_url = result[index]['img_url']
                 title = result[index]['title']
                 authors = result[index]['authors']
-                # 결과 이미지를 result_0.png, result_1.png로 저장. 덮어쓰기해서 용량 아끼기 위함.
                 generate_result_img(index, mockup_img, img_url, title, authors)
-
             next_img = st.button("다음 장으로 ▶▶")
-
-            if next_img:
-                change()
-
+    
         with c2:
             want_to_main = st.button("새 플레이리스트 만들기 🔁")
             if want_to_main:
@@ -186,6 +197,19 @@ with con1:
                     st.write(
                         f"**{item['authors']}** | {item['publisher']} | {item['published_at']} | [yes24]({item['url']})")
                     st.write(item["summary"])
+    
+    
+        if next_img:
+            progress_text = "**다음장으로 넘기는 중입니다...📖**"
+            my_bar = st.progress(0, text=progress_text)
+            
+            for percent_complete in range(100):
+                time.sleep(0.01)
+                my_bar.progress(percent_complete + 1, text=progress_text)
+            time.sleep(1)
+            with my_bar:
+                change()
+                my_bar.empty()
 
 with empty2:
     st.empty()
