@@ -116,15 +116,8 @@ def get_embedding(query):
         model="text-embedding-ada-002"
     )
 
-    embedding_str = " "
-    
     embedding_data = response["data"][0]["embedding"]
-    for item in embedding_data:
-        if isinstance(item, str):
-            embedding_str += item + " "
-        else:
-            # 만약 숫자(float)라면 문자열로 변환하여 추가
-            embedding_str += str(item) + " "
+    embedding_str = str(embedding_data)
     
     return embedding_str
 
