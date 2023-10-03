@@ -1,0 +1,34 @@
+body {
+    color: #963717;
+    background-color: #963717;
+    /* font-size: 100px; */
+}
+
+.stButton>button{
+    color: #FAF4E4;
+    background-color: #963717;
+    box-sizing: 7%;
+    height: 1em;
+    width: 4em;
+    font-size:70px;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.stTextInput>div>div>input {
+    color: #FAF4E4;
+    font-size:500px;
+    font-weight: bold;
+}
+
+.fullScreenFrame > div {
+    display: flex;
+    justify-content: center;
+}
+
+.center {
+    display: #F1AB10;
+    margin-left: auto;
+    margin-right: auto;
+  }
