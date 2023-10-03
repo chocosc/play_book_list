@@ -96,30 +96,42 @@ def _generate_authors_img(authors):
 
 
 def generate_result_img(index, mockup_img, img_url, title, authors):
-    img1 = mockup_img.copy()
-    img2 = _generate_cover_img(img_url)
-    img3 = _generate_title_img(title)
-    img4 = _generate_authors_img(authors)
+    # 모의 이미지를 복사하여 새로운 이미지로 시작
+    img_result = mockup_img.copy()
 
-    # 앨범 커버 위치 지정
-    x_position = 21
-    y_position = 23
+    # 앨범 커버를 가져와서 크기 조정
+    img_cover = _generate_cover_img(img_url)
+    img_cover = img_cover.resize((200, 200))  # 원하는 크기로 조정
 
-    # mockup + cover
-    img1.paste(img2, (x_position, y_position))
+    # 이미지를 합성할 위치 지정
+    x_cover = 21
+    y_cover = 23
 
-    # 타이틀 위치 지정
-    x_position = 21
-    y_position = 300
+    # 모의 이미지에 앨범 커버 이미지를 합성
+    img_result.paste(img_cover, (x_cover, y_cover))
 
-    # mockup + cover + title
-    img1.paste(img3, (x_position, y_position), img3)
+    # 타이틀 이미지를 생성
+    img_title = _generate_title_img(title)
 
-    # 작가 위치 지정
-    x_position = 21  # x 좌표 조절
-    y_position = 330   # y 좌표 조절
+    # 이미지를 합성할 위치 지정
+    x_title = 21
+    y_title = 300
 
-    # mockup + cover + title + authors
-    img1.paste(img4, (x_position, y_position), img4)
+    # 모의 이미지에 타이틀 이미지를 합성
+    img_result.paste(img_title, (x_title, y_title), img_title)
 
-    img1.save(f"./pages/result_img/result_{index}.png")
+    # 작가 이미지를 생성
+    img_authors = _generate_authors_img(authors)
+
+    # 이미지를 합성할 위치 지정
+    x_authors = 21
+    y_authors = 330
+
+    # 모의 이미지에 작가 이미지를 합성
+    img_result.paste(img_authors, (x_authors, y_authors), img_authors)
+
+    # 합성된 이미지를 저장
+    img_result_path = f"./pages/result_img/result_{index}.png"
+    img_result.save(img_result_path)
+
+    return img_result_path
