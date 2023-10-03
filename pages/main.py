@@ -117,7 +117,7 @@ def get_embedding(query):
     )
 
     embedding_data = response["data"][0]["embedding"]
-    embedding_str_list = [str(item) for item in embedding_data]
+    embedding_str_list = [str(item) if isinstance(item, (int, float)) else item for item in embedding_data]
     result_str = " ".join(embedding_str_list)
 
     return embedding_str
