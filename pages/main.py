@@ -116,10 +116,8 @@ def get_embedding(query):
     return response["data"][0]["embedding"]
 
 def check_and_add_vector(pinecone_index, index_list, df):
-    for i in index_list:
-        s_id = str(i)
-        
-        result = index.retrieve(ids=[s_id], namespace="playbooklist")
+    for s_id in index_list:
+        result = pinecone_index.retrieve(ids=[str(s_id)], namespace="playbooklist")
 
         # 결과에서 벡터 데이터 추출
         if result and result[0]['status'] == 'ok':
