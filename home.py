@@ -1,7 +1,6 @@
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
 from google.oauth2 import service_account
-from google.cloud import bigquery
 import pinecone
 import openai
 
