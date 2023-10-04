@@ -46,14 +46,13 @@ def get_vectors_by_ids(pinecone_index, index_list):
     vector_data_list = []  # 벡터 데이터를 모을 리스트
 
     for s_id in index_list:
-        try:
-            # ID에 해당하는 벡터 데이터를 불러옴
-            result = pinecone_index.retrieve(ids=[str(s_id)], namespace="playbooklist")
+        # ID에 해당하는 벡터 데이터를 불러옴
+        result = pinecone_index.retrieve(ids=[str(s_id)], namespace="playbooklist")
 
-            # 결과에서 벡터 데이터 추출
-            if result and result[0]['status'] == 'ok':
-                vector_data = result[0]['data'][0]['vector']
-                vector_data_list.append(vector_data)
+        # 결과에서 벡터 데이터 추출
+        if result and result[0]['status'] == 'ok':
+            vector_data = result[0]['data'][0]['vector']
+            vector_data_list.append(vector_data)
 
     return vector_data_list
 
@@ -71,9 +70,9 @@ def generate_result():
     vector_data_list = get_vectors_by_ids(pinecone_index, index_list)
     index = [i for i in range(len(vector_data_list))]
     row_df = pd.DataFrame(vector_data_list, index=index)
-    embedding_len = len(eval(row_df.loc[0, 'embeddings']))
+    embedding_len = len(eval(row_df.loc[0, 'embedding']))
     embeddings = np.array([0.0 for x in range(embedding_len)])
-    for embedding in list(row_df['embeddings']):
+    for embedding in list(row_df['embedding']):
         embeddings += eval(embedding)
     result = _vector_search(list(embeddings))
     return result
