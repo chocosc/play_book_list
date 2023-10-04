@@ -115,15 +115,20 @@ def get_embedding(query):
     )
     return response["data"][0]["embedding"]
 
-def check_and_add_vector(index_list, df):
+def check_and_add_vector(pinecone_index, index_list, df):
     for i in index_list:
         s_id = str(i)
-        if not pinecone_index.exists(s_id, namespace="playbooklist"):
+        
+        result = index.retrieve(ids=[s_id], namespace="playbooklist")
+
+        # 결과에서 벡터 데이터 추출
+        if result and result[0]['status'] == 'ok':
+            pass
+        else:
             song_info = df[df["song_id"] == s_id]
             s_contents = str(s_contents)
             s_eng = get_translation(s_contents)
             s_embedding = get_embedding(s_eng)
-
             pinecone_index.upsert([(s_id, s_embedding)], namespace="playbooklist")
 
 if __name__ == '__main__':
@@ -208,7 +213,7 @@ if __name__ == '__main__':
                         my_bar.progress(percent_complete + 1, text=progress_text)
                     time.sleep(1)
                     with my_bar:
-                        check_and_add_vector(index_list, df)
+                        check_and_add_vector(pinecone_index, index_list, df)
                         my_bar.empty()
                         st.success("Play Book List🎼")
                         with open('index_list.pickle', 'wb') as file:
