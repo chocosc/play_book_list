@@ -1,11 +1,8 @@
 import streamlit as st
-from google.cloud import firestore
 from streamlit_extras.switch_page_button import switch_page
 from annotated_text import annotated_text
 from google.cloud import translate
 from google.oauth2.service_account import Credentials
-import firebase_admin
-from firebase_admin import credentials
 import pinecone
 import pandas as pd
 import pickle
@@ -44,10 +41,11 @@ def init_openai_key():
 
     return openai.api_key
 
-@st.cache_resource
-def init_google_translation_connection():
+def init_gcp_connection():
     credentials = Credentials.from_service_account_info(st.secrets.GOOGLE)
-    return translate.TranslationServiceClient(credentials=credentials)
+    translate_client = translate.TranslationServiceClient(credentials=credentials)
+
+    return translate_client
 
 def init_pinecone_connection():
     pinecone.init(
@@ -79,7 +77,7 @@ def generate_index_list(songs, df):
     return index_list
 
 @st.cache_data(show_spinner=None)
-def display_song_information(index_id, df):
+def display_song_information(index_id):
     album_id = df[df["song_id"] == int(index_id)]["album_id"].values[0]
     st.image(f"./pages/album_img/{album_id}.png")
     annotated_text(("Song Name", "", "#ff873d"))
@@ -87,7 +85,7 @@ def display_song_information(index_id, df):
 
 def get_translation(query):
     parent = f"projects/{st.secrets.PROJECTID}/locations/global"
-    response = google_translate_client.translate_text(
+    response = translate_client.translate_text(
         request={
             "parent": parent,
             "contents": [query],
@@ -115,44 +113,22 @@ def get_embedding(query):
         input=[query],
         model="text-embedding-ada-002"
     )
+    return response["data"][0]["embedding"]
 
-    embedding_data = response["data"][0]["embedding"]
-    embedding_str = str(embedding_data)
-    
-    return embedding_str
+def check_and_add_vector(index_list, df):
+    for i in index_list:
+        s_id = str(i)
+        if not pinecone_index.exists(s_id, namespace="playbooklist"):
+            song_info = df[df["song_id"] == s_id]
+            s_contents = str(s_contents)
+            s_eng = get_translation(s_contents)
+            s_embedding = get_embedding(s_eng)
 
-def check_embedding(index_list, df):
-    # Firestore 클라이언트 설정
-    db = firestore.Client.from_service_account_json("./.streamlit/playbooklist.json")
-
-    index_len = len(index_list)
-    for i in range(index_len):
-        s_id = int(index_list[i])
-        doc_ref = db.collection("song_df").document(str(s_id))  # document ID를 문자열로 변경
-        doc = doc_ref.get()
-
-        if not doc.exists:
-            s_name = df[df["song_id"] == s_id]["song_name"].values[0]
-            s_contents = df[df["song_id"] == s_id]["total_contents"].values[0]
-            # get_translation 함수를 사용하여 번역 수행
-            s_eng = get_translation(query=s_contents)
-            # get_embedding 함수를 사용하여 텍스트 임베딩 생성
-            s_embedding = get_embedding(query=s_eng)
-
-            data = {
-                "id": s_id,
-                "name": s_name,
-                "kor_contents": s_contents,
-                "eng": s_eng,
-                "embeddings": s_embedding,
-            }
-
-            # Firestore에 데이터 저장
-            doc_ref.set(data)
+            pinecone_index.upsert([(s_id, s_embedding)], namespace="playbooklist")
 
 if __name__ == '__main__':
-    google_translate_client = init_google_translation_connection()
     openai.api_key = init_openai_key()
+    translate_client = init_gcp_connection()
     pinecone_index = init_pinecone_connection()
     submit_button = False
 
@@ -165,6 +141,9 @@ if __name__ == '__main__':
             switch_page("home")
     with empty2:
         st.empty()
+
+    # if 'i' not in st.session_state:
+    #     st.session_state['i'] = []
 
     empty1, con1, empty2 = st.columns([0.2, 1.0, 0.2])
     with empty1:
@@ -189,25 +168,25 @@ if __name__ == '__main__':
                     submit_button = st.form_submit_button("플레이북리스트 결과보기 >")
                 c1, c2, c3, c4, c5 = st.columns(5)
                 with c1:
-                    display_song_information(index_list[0], df)
+                    display_song_information(index_list[0])
                 with c2:
                     try:
-                        display_song_information(index_list[1], df)
+                        display_song_information(index_list[1])
                     except IndexError:
                         pass
                 with c3:
                     try:
-                        display_song_information(index_list[2], df)
+                        display_song_information(index_list[2])
                     except IndexError:
                         pass
                 with c4:
                     try:
-                        display_song_information(index_list[3], df)
+                        display_song_information(index_list[3])
                     except IndexError:
                         pass
                 with c5:
                     try:
-                        display_song_information(index_list[4], df)
+                        display_song_information(index_list[4])
                     except IndexError:
                         pass
 
@@ -221,7 +200,7 @@ if __name__ == '__main__':
         if index_list:
             with c1:
                 if submit_button:
-                    progress_text = "**당신을 위한 책을 찾고 있습니다...🔍**"
+                    progress_text = "당신을 위한 책을 찾고 있습니다...🔍"
                     my_bar = st.progress(0, text=progress_text)
 
                     for percent_complete in range(100):
@@ -229,7 +208,7 @@ if __name__ == '__main__':
                         my_bar.progress(percent_complete + 1, text=progress_text)
                     time.sleep(1)
                     with my_bar:
-                        check_embedding(index_list, df)
+                        check_and_add_vector(index_list, df)
                         my_bar.empty()
                         st.success("Play Book List🎼")
                         with open('index_list.pickle', 'wb') as file:
