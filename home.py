@@ -1,6 +1,7 @@
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
-from google.oauth2 import service_account
+from google.cloud import translate
+from google.oauth2.service_account import Credentials
 import pinecone
 import openai
 
@@ -38,15 +39,19 @@ def init_openai_key():
 
     return openai.api_key
 
+def init_gcp_connection():
+    credentials = Credentials.from_service_account_info(st.secrets.GOOGLE)
+    translate_client = translate.TranslationServiceClient(credentials=credentials)
 
-@st.cache_resource
+    return translate_client
+
 def init_pinecone_connection():
     pinecone.init(
         api_key=st.secrets["PINECONE_KEY"],
         environment=st.secrets["PINECONE_REGION"]
     )
-    index = pinecone.Index('bookstore')
-    return index
+    pinecone_index = pinecone.Index('bookstore')
+    return pinecone_index
 
 
 @st.cache_resource(show_spinner=None)
