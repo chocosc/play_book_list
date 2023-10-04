@@ -3,32 +3,13 @@ import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
 from annotated_text import annotated_text
 from streamlit_extras.stylable_container import stylable_container
-from st_clickable_images import clickable_images
-from google.oauth2 import service_account
-from google.cloud import translate
-from google.cloud import firestore
-import firebase_admin
-from firebase_admin import credentials
 import pandas as pd
 import numpy as np
 import openai
 import pinecone
-import base64
-import requests
+from PIL import Image
 import pickle
-import time
-from google.cloud.firestore import FieldFilter
 from pages.generate_result_img import *
-
-st.markdown(
-    """
-    <style>
-        .stProgress > div > div > div > div {
-            background-color: orange;
-        }
-    </style>""",
-    unsafe_allow_html=True,
-)
 
 @st.cache_resource(show_spinner=None)
 def init_openai_key():
@@ -38,6 +19,14 @@ def init_openai_key():
 
 with open('index_list.pickle', 'rb') as file:
     index_list = pickle.load(file)
+
+def init_pinecone_connection():
+    pinecone.init(
+        api_key=st.secrets["PINECONE_KEY"],
+        environment=st.secrets["PINECONE_REGION"]
+    )
+    pinecone_index = pinecone.Index('bookstore')
+    return pinecone_index
 
 @st.cache_data(show_spinner=None)
 def generate_songs():
@@ -53,31 +42,23 @@ def get_embedding(query):
     )
     return response["data"][0]["embedding"]
 
-def run_query(index_list):
-    db = firestore.Client.from_service_account_json("./.streamlit/playbooklist.json")
-    for i in index_list:
-        s_id = str(i)
-        docs = (
-            db.collection("song_df")
-            .where(filter=FieldFilter("id", "==", s_id))
-            .stream()
-            )
+def get_vectors_by_ids(pinecone_index, index_list):
+    vector_data_list = []  # 벡터 데이터를 모을 리스트
 
-    return docs
+    for s_id in index_list:
+        try:
+            # ID에 해당하는 벡터 데이터를 불러옴
+            result = pinecone_index.retrieve(ids=[str(s_id)], namespace="playbooklist")
 
-def __connect_pinecone():
-    pinecone_region = "gcp-starter"
-    pinecone_key = 'efa96ac5-6f91-4815-bc98-e9b14b857d45'  # getpass("PINECONE API KEY")
-    pinecone.init(
-        api_key=pinecone_key,
-        environment=pinecone_region
-    )
-    index = pinecone.Index("bookstore")
-    return index
+            # 결과에서 벡터 데이터 추출
+            if result and result[0]['status'] == 'ok':
+                vector_data = result[0]['data'][0]['vector']
+                vector_data_list.append(vector_data)
+
+    return vector_data_list
 
 def _vector_search(query_embedding):
-    index = __connect_pinecone()
-    results = index.query(
+    results = pinecone_index.query(
         vector=query_embedding,
         top_k=20,
         include_metadata=True,
@@ -87,29 +68,14 @@ def _vector_search(query_embedding):
                   key=lambda x: (x['review_cnt'], x['rating']), reverse=True)[:5]
 
 def generate_result():
-    docs = run_query(index_list)
-    embedding_len = None
-    embeddings_sum = None
-
-    for doc in docs:
-        embeddings_str = doc.get("embeddings")  # "embeddings" 필드의 값을 가져옵니다.
-
-        if not embeddings_str:
-            continue
-
-        embeddings = np.array(eval(embeddings_str.replace(' ', ',')))
-
-        if embeddings_sum is None:
-            embedding_len = len(embeddings)
-            embeddings_sum = np.zeros(embedding_len)
-
-        embeddings_sum += embeddings
-
-    if embedding_len is None:
-        return []
-
-    result = _vector_search(embeddings_sum)
-
+    vector_data_list = get_vectors_by_ids(pinecone_index, index_list)
+    index = [i for i in range(len(vector_data_list))]
+    row_df = pd.DataFrame(vector_data_list, index=index)
+    embedding_len = len(eval(row_df.loc[0, 'embeddings']))
+    embeddings = np.array([0.0 for x in range(embedding_len)])
+    for embedding in list(row_df['embeddings']):
+        embeddings += eval(embedding)
+    result = _vector_search(list(embeddings))
     return result
 
 cur_img_index = 0  # cur_img_index를 전역 변수로 초기화
@@ -148,6 +114,10 @@ def change():
 
 def get_author_title(item):
     return f"**{item['authors']}** | **{item['publisher']}**"
+
+if __name__ == '__main__':
+    openai.api_key = init_openai_key()
+    pinecone_index = init_pinecone_connection()
 
 empty1, con1, empty2 = st.columns([0.2, 1.0, 0.2])
 with empty1:
